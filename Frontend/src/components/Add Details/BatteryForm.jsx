@@ -36,7 +36,7 @@ export default function BatteryForm() {
 
   const [errors, setErrors] = useState({});
 
-  /* Auto expiry date */
+  /* Auto expiry date (optional logic) */
   useEffect(() => {
     if (form.saleDate && form.warrantyMonths) {
       const d = new Date(form.saleDate);
@@ -50,34 +50,16 @@ export default function BatteryForm() {
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-    setErrors({ ...errors, [e.target.name]: "" }); // clear error
+    setErrors({ ...errors, [e.target.name]: "" });
   };
 
-  /* 🔥 VALIDATION */
+  /* 🔥 ONLY SERIAL VALIDATION */
   const validateForm = () => {
     const newErrors = {};
 
-    if (!form.name.trim()) newErrors.name = "Customer name required";
-
-    if (!form.phone.trim())
-      newErrors.phone = "Phone number required";
-    else if (!/^\d{10}$/.test(form.phone))
-      newErrors.phone = "Phone must be 10 digits";
-
-    if (!form.place.trim()) newErrors.place = "Place required";
-    if (!form.vehicleType) newErrors.vehicleType = "Select vehicle type";
-    if (!form.vehicleNumber.trim())
-      newErrors.vehicleNumber = "Vehicle number required";
-
-    if (!form.battery) newErrors.battery = "Select battery";
-    if (!form.model) newErrors.model = "Select model";
-    if (!form.serial.trim())
-      newErrors.serial = "Serial number required";
-
-    if (!form.warrantyMonths)
-      newErrors.warrantyMonths = "Select warranty";
-    if (!form.saleDate)
-      newErrors.saleDate = "Sale date required";
+    if (!form.serial.trim()) {
+      newErrors.serial = "Serial number is required";
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -86,12 +68,13 @@ export default function BatteryForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validateForm()) return; // ❌ stop save
+    if (!validateForm()) return;
 
     try {
       await createBattery(form);
       alert("Battery saved successfully ✅");
-      
+
+      // Clear form
       setForm({
         name: "",
         phone: "",
@@ -105,6 +88,8 @@ export default function BatteryForm() {
         saleDate: "",
         expiryDate: "",
       });
+
+      setErrors({});
     } catch {
       alert("Save failed ❌");
     }
@@ -126,79 +111,81 @@ export default function BatteryForm() {
         {/* Header */}
         <motion.div variants={item} className="text-center border-b pb-4">
           <h2 className="text-2xl font-bold text-gray-800">
-            Add Customer Details
+            Add Battery Details
           </h2>
           <p className="text-sm text-gray-500">
-            Enter customer & battery information
+            Only Serial Number is mandatory
           </p>
         </motion.div>
 
         {/* Customer Info */}
         <motion.div variants={item} className="grid md:grid-cols-2 gap-4">
-          <div>
-            <TextInput label="Customer Name" name="name" onChange={handleChange} />
-            {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
-          </div>
-
-          <div>
-            <TextInput label="Phone Number" name="phone" onChange={handleChange} />
-            {errors.phone && <p className="text-red-500 text-sm">{errors.phone}</p>}
-          </div>
-        </motion.div>
-
-        <motion.div variants={item}>
-          <TextInput label="Place" name="place" onChange={handleChange} />
-          {errors.place && <p className="text-red-500 text-sm">{errors.place}</p>}
-        </motion.div>
-
-        {/* Vehicle Info */}
-        <motion.div variants={item} className="grid md:grid-cols-2 gap-4">
-          <div>
-            <VehicleTypeSelect value={form.vehicleType} onChange={handleChange} />
-            {errors.vehicleType && (
-              <p className="text-red-500 text-sm">{errors.vehicleType}</p>
-            )}
-          </div>
-
-          <div>
-            <VehicleNumberInput value={form.vehicleNumber} onChange={handleChange} />
-            {errors.vehicleNumber && (
-              <p className="text-red-500 text-sm">{errors.vehicleNumber}</p>
-            )}
-          </div>
-        </motion.div>
-
-        {/* Battery Info */}
-        <motion.div variants={item} className="grid md:grid-cols-2 gap-4">
-          <div>
-            <BatterySelect value={form.battery} onChange={handleChange} />
-            {errors.battery && <p className="text-red-500 text-sm">{errors.battery}</p>}
-          </div>
-
-          <div>
-            <ModelSelect
-              battery={form.battery}
-              value={form.model}
-              onChange={handleChange}
-            />
-            {errors.model && <p className="text-red-500 text-sm">{errors.model}</p>}
-          </div>
+          <TextInput
+            label="Customer Name"
+            name="name"
+            value={form.name}
+            onChange={handleChange}
+          />
+          <TextInput
+            label="Phone Number"
+            name="phone"
+            value={form.phone}
+            onChange={handleChange}
+          />
         </motion.div>
 
         <motion.div variants={item}>
           <TextInput
-            label="Battery Serial Number"
-            name="serial"
+            label="Place"
+            name="place"
+            value={form.place}
             onChange={handleChange}
           />
-          {errors.serial && <p className="text-red-500 text-sm">{errors.serial}</p>}
+        </motion.div>
+
+        {/* Vehicle Info */}
+        <motion.div variants={item} className="grid md:grid-cols-2 gap-4">
+          <VehicleTypeSelect
+            value={form.vehicleType}
+            onChange={handleChange}
+          />
+          <VehicleNumberInput
+            value={form.vehicleNumber}
+            onChange={handleChange}
+          />
+        </motion.div>
+
+        {/* Battery Info */}
+        <motion.div variants={item} className="grid md:grid-cols-2 gap-4">
+          <BatterySelect
+            value={form.battery}
+            onChange={handleChange}
+          />
+          <ModelSelect
+            battery={form.battery}
+            value={form.model}
+            onChange={handleChange}
+          />
+        </motion.div>
+
+        {/* SERIAL (ONLY REQUIRED FIELD) */}
+        <motion.div variants={item}>
+          <TextInput
+            label="Battery Serial Number *"
+            name="serial"
+            value={form.serial}
+            onChange={handleChange}
+          />
+          {errors.serial && (
+            <p className="text-red-500 text-sm">{errors.serial}</p>
+          )}
         </motion.div>
 
         <motion.div variants={item}>
-          <WarrantySelect value={form.warrantyMonths} onChange={handleChange} />
-          {errors.warrantyMonths && (
-            <p className="text-red-500 text-sm">{errors.warrantyMonths}</p>
-          )}
+          <WarrantySelect
+            value={form.warrantyMonths}
+            onChange={handleChange}
+          />
         </motion.div>
 
         <motion.div variants={item}>
@@ -207,9 +194,6 @@ export default function BatteryForm() {
             expiryDate={form.expiryDate}
             onChange={handleChange}
           />
-          {errors.saleDate && (
-            <p className="text-red-500 text-sm">{errors.saleDate}</p>
-          )}
         </motion.div>
 
         {/* Submit */}
